@@ -1,0 +1,11 @@
+Model Information:
+* title:	Hunter Rifle Model Pixel Gun 3D
+* source:	https://sketchfab.com/3d-models/hunter-rifle-model-pixel-gun-3d-1dc1fd775d9a466484a39a8ea86ac3dc
+* author:	FREAXZGaming (https://sketchfab.com/freaxzgaming)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Hunter Rifle Model Pixel Gun 3D" (https://sketchfab.com/3d-models/hunter-rifle-model-pixel-gun-3d-1dc1fd775d9a466484a39a8ea86ac3dc) by FREAXZGaming (https://sketchfab.com/freaxzgaming) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
