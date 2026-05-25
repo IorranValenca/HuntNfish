@@ -265,43 +265,110 @@ class HuntHUD:
         self.shop_visible = False
         self._shop_tab    = 'sell'   # 'sell' | 'buy'
 
+        PANEL_W, PANEL_H = 0.86, 0.86
+
+        # Dim full-screen background
         self._shop_bg = Entity(parent=ui, model='quad', texture=solid(0, 0, 0),
-                               color=color.rgba(0, 0, 0, 200),
-                               scale=(2, 2), z=-0.8, enabled=False)
+                               color=color.rgba(0, 0, 0, 210),
+                               scale=(2, 2), z=-0.80, enabled=False)
+        # Golden-wood outer frame
+        self._shop_frame = Entity(parent=ui, model='quad',
+                                  texture=solid(165, 115, 50),
+                                  scale=(PANEL_W + 0.018, PANEL_H + 0.018),
+                                  z=-0.81, enabled=False)
+        # Inner panel (warm dark wood)
         self._shop_panel = Entity(parent=ui, model='quad',
-                                  texture=solid(20, 28, 38),
-                                  scale=(.70, .72),
-                                  position=(0, 0), z=-0.82, enabled=False)
-        Entity(parent=self._shop_panel, model='quad',
-               texture=solid(80, 130, 160),
-               scale=(1.025, 1.022), z=.001)
-        Entity(parent=self._shop_panel, model='quad',
-               texture=solid(20, 28, 38),
-               scale=(0.99, 0.99), z=.0001)
+                                  texture=solid(40, 28, 18),
+                                  scale=(PANEL_W, PANEL_H),
+                                  z=-0.815, enabled=False)
+        # Header banner (darker strip across the top)
+        self._shop_header = Entity(parent=ui, model='quad',
+                                   texture=solid(26, 16, 8),
+                                   scale=(PANEL_W, 0.11),
+                                   position=(0, 0.36), z=-0.82, enabled=False)
+        # Thin gold divider beneath the header
+        self._shop_div = Entity(parent=ui, model='quad',
+                                texture=solid(165, 115, 50),
+                                scale=(PANEL_W, 0.003),
+                                position=(0, 0.30), z=-0.82, enabled=False)
         self._shop_title = Text(parent=ui, text="TRADER'S LODGE",
-                                position=(0, .29), scale=2.0,
-                                color=color.rgb(255, 210, 100),
-                                origin=(0, 0), enabled=False, z=-.87)
-        self._shop_tab_sell = Text(parent=ui, text='[1] SELL',
-                                   position=(-.15, .21), scale=1.2,
-                                   color=color.rgb(255, 230, 120),
-                                   origin=(0, 0), enabled=False, z=-.87)
-        self._shop_tab_buy  = Text(parent=ui, text='[2] BUY',
-                                   position=(.15, .21), scale=1.2,
-                                   color=color.rgba(180, 180, 180, 200),
-                                   origin=(0, 0), enabled=False, z=-.87)
+                                position=(-0.10, 0.36), scale=2.0,
+                                color=color.rgb(255, 215, 110),
+                                origin=(0, 0), enabled=False, z=-0.83)
+        # Money badge (top-right of header)
+        self._shop_money_chip = Entity(parent=ui, model='quad',
+                                       texture=solid(20, 55, 28),
+                                       scale=(0.18, 0.060),
+                                       position=(0.32, 0.36),
+                                       z=-0.823, enabled=False)
+        Entity(parent=self._shop_money_chip, model='quad',
+               texture=solid(80, 200, 100),
+               scale=(1.03, 1.06), z=.001, enabled=True)
+        Entity(parent=self._shop_money_chip, model='quad',
+               texture=solid(20, 55, 28),
+               scale=(0.985, 0.93), z=.0001, enabled=True)
         self._shop_money = Text(parent=ui, text='$0',
-                                position=(.27, .29), scale=1.4,
-                                color=color.rgb(120, 220, 120),
-                                origin=(0, 0), enabled=False, z=-.87)
-        self._shop_body = Text(parent=ui, text='',
-                               position=(-.30, .15), scale=.95,
-                               color=color.rgba(235, 235, 235, 240),
-                               enabled=False, z=-.87)
+                                position=(0.32, 0.36), scale=1.35,
+                                color=color.rgb(150, 250, 150),
+                                origin=(0, 0), enabled=False, z=-0.83)
+
+        # Tabs — two boxes with active highlight
+        self._shop_tab_sell_bg = Entity(parent=ui, model='quad',
+                                        texture=solid(78, 50, 24),
+                                        scale=(0.22, 0.058),
+                                        position=(-0.16, 0.25),
+                                        z=-0.823, enabled=False)
+        self._shop_tab_buy_bg  = Entity(parent=ui, model='quad',
+                                        texture=solid(45, 30, 16),
+                                        scale=(0.22, 0.058),
+                                        position=( 0.16, 0.25),
+                                        z=-0.823, enabled=False)
+        self._shop_tab_sell = Text(parent=ui, text='[1]  SELL',
+                                   position=(-0.16, 0.25), scale=1.1,
+                                   color=color.rgb(255, 235, 140),
+                                   origin=(0, 0), enabled=False, z=-0.83)
+        self._shop_tab_buy  = Text(parent=ui, text='[2]  BUY',
+                                   position=( 0.16, 0.25), scale=1.1,
+                                   color=color.rgba(180, 160, 140, 210),
+                                   origin=(0, 0), enabled=False, z=-0.83)
+
+        # Row pool — alternating stripe rows for inventory / catalog
+        self._shop_rows = []
+        ROW_Y0 = 0.17
+        ROW_H  = 0.052
+        ROW_W  = PANEL_W - 0.06
+        for i in range(9):
+            y = ROW_Y0 - i * ROW_H
+            stripe_tex = solid(52, 38, 22) if i % 2 == 0 else solid(42, 30, 18)
+            bg = Entity(parent=ui, model='quad', texture=stripe_tex,
+                        scale=(ROW_W, ROW_H - 0.006),
+                        position=(0, y), z=-0.823, enabled=False)
+            chip = Entity(parent=ui, model='quad',
+                          texture=solid(165, 115, 50),
+                          scale=(0.05, 0.038),
+                          position=(-0.36, y), z=-0.826, enabled=False)
+            key = Text(parent=ui, text='',
+                       position=(-0.36, y), scale=0.95,
+                       color=color.rgb(30, 18, 8),
+                       origin=(0, 0), enabled=False, z=-0.83)
+            name = Text(parent=ui, text='',
+                        position=(-0.32, y), scale=1.0,
+                        color=color.rgb(240, 232, 218),
+                        enabled=False, z=-0.83)
+            price = Text(parent=ui, text='',
+                         position=(0.36, y), scale=1.05,
+                         color=color.rgb(150, 245, 150),
+                         origin=(0.5, 0), enabled=False, z=-0.83)
+            self._shop_rows.append({
+                'bg': bg, 'chip': chip, 'key': key,
+                'name': name, 'price': price,
+            })
+
+        # Footer (hint line)
         self._shop_footer = Text(parent=ui, text='',
-                                 position=(0, -.30), scale=.92,
-                                 color=color.rgba(200, 200, 200, 220),
-                                 origin=(0, 0), enabled=False, z=-.87)
+                                 position=(0, -0.38), scale=0.88,
+                                 color=color.rgba(205, 180, 145, 220),
+                                 origin=(0, 0), enabled=False, z=-0.83)
 
     def set_tool(self, tool):
         names = {
@@ -531,67 +598,139 @@ class HuntHUD:
         self._cabin_prompt.enabled = visible
 
     # ── Shop panel ──────────────────────────────────────────────────────
+    _SHOP_FRAME_ENTITIES = (
+        '_shop_bg', '_shop_frame', '_shop_panel', '_shop_header',
+        '_shop_div', '_shop_title', '_shop_money_chip', '_shop_money',
+        '_shop_tab_sell_bg', '_shop_tab_buy_bg',
+        '_shop_tab_sell', '_shop_tab_buy', '_shop_footer',
+    )
+
     def show_shop(self):
         self.shop_visible = True
         self._shop_tab    = 'sell'
-        for e in (self._shop_bg, self._shop_panel, self._shop_title,
-                  self._shop_tab_sell, self._shop_tab_buy,
-                  self._shop_money, self._shop_body, self._shop_footer):
-            e.enabled = True
+        for name in self._SHOP_FRAME_ENTITIES:
+            getattr(self, name).enabled = True
+        # rows enabled per-call by render_shop()
 
     def hide_shop(self):
         self.shop_visible = False
-        for e in (self._shop_bg, self._shop_panel, self._shop_title,
-                  self._shop_tab_sell, self._shop_tab_buy,
-                  self._shop_money, self._shop_body, self._shop_footer):
-            e.enabled = False
+        for name in self._SHOP_FRAME_ENTITIES:
+            getattr(self, name).enabled = False
+        for row in self._shop_rows:
+            for e in row.values():
+                e.enabled = False
 
     def set_shop_tab(self, tab):
         self._shop_tab = tab
         if tab == 'sell':
-            self._shop_tab_sell.color = color.rgb(255, 230, 120)
-            self._shop_tab_buy.color  = color.rgba(180, 180, 180, 200)
+            self._shop_tab_sell_bg.texture = solid(78, 50, 24)
+            self._shop_tab_buy_bg.texture  = solid(45, 30, 16)
+            self._shop_tab_sell.color      = color.rgb(255, 235, 140)
+            self._shop_tab_buy.color       = color.rgba(180, 160, 140, 210)
         else:
-            self._shop_tab_sell.color = color.rgba(180, 180, 180, 200)
-            self._shop_tab_buy.color  = color.rgb(255, 230, 120)
+            self._shop_tab_sell_bg.texture = solid(45, 30, 16)
+            self._shop_tab_buy_bg.texture  = solid(78, 50, 24)
+            self._shop_tab_sell.color      = color.rgba(180, 160, 140, 210)
+            self._shop_tab_buy.color       = color.rgb(255, 235, 140)
+
+    def _stripe_tex(self, i):
+        return solid(52, 38, 22) if i % 2 == 0 else solid(42, 30, 18)
+
+    def _clear_rows(self):
+        for row in self._shop_rows:
+            for e in row.values():
+                e.enabled = False
+
+    def _fill_row(self, idx, key_label, name, price_text, price_rgb,
+                  *, sell_all=False, dim_name=False):
+        if idx >= len(self._shop_rows):
+            return
+        r = self._shop_rows[idx]
+        if sell_all:
+            r['bg'].texture   = solid(28, 60, 32)
+            r['chip'].texture = solid(90, 210, 110)
+        else:
+            r['bg'].texture   = self._stripe_tex(idx)
+            r['chip'].texture = solid(165, 115, 50)
+        r['bg'].enabled   = True
+        r['chip'].enabled = bool(key_label)
+        r['key'].text     = key_label
+        r['key'].color    = color.rgb(15, 30, 10) if sell_all else color.rgb(30, 18, 8)
+        r['key'].enabled  = bool(key_label)
+        r['name'].text    = '  ' + name
+        if sell_all:
+            r['name'].color = color.rgb(170, 255, 180)
+        elif dim_name:
+            r['name'].color = color.rgba(190, 170, 140, 200)
+        else:
+            r['name'].color = color.rgb(240, 232, 218)
+        r['name'].enabled = True
+        r['price'].text   = price_text
+        r['price'].color  = color.rgb(*price_rgb)
+        r['price'].enabled = True
 
     def render_shop(self, money, carcasses, weapons):
         """carcasses = [{name,grade,weight,price}, ...]
         weapons   = [{key,name,price,owned,affordable}, ...]"""
         self._shop_money.text = f'${money}'
+        self._clear_rows()
+
         if self._shop_tab == 'sell':
             if not carcasses:
-                body = '  (no animals to sell — go hunt!)'
-                footer = ''
-            else:
-                rows = []
-                for i, c in enumerate(carcasses[:9]):
-                    key = str(i + 1)
-                    rows.append(
-                        f'  [{key}]  {c["name"]:<16}{c["weight"]:>5.1f} kg     '
-                        f'+${c["price"]}'
-                    )
-                if len(carcasses) > 9:
-                    rows.append(f'  ...and {len(carcasses)-9} more')
-                rows.append('')
-                rows.append(f'  [A]  Sell ALL  ('
-                            f'+${sum(c["price"] for c in carcasses)})')
-                body = '\n'.join(rows)
-                footer = 'press number to sell  ·  TAB switches tab  ·  E closes'
+                self._fill_row(0, '', '(no carcasses — go hunt!)',
+                               '', (150, 245, 150), dim_name=True)
+                self._shop_footer.text = (
+                    'TAB switches tab    ·    E or ESC closes'
+                )
+                return
+
+            # Reserve 1 row for "...and N more" if needed, and 1 for "Sell ALL"
+            max_items = 8 if len(carcasses) <= 8 else 7
+            shown = 0
+            for i, c in enumerate(carcasses[:max_items]):
+                self._fill_row(
+                    shown, str(i + 1),
+                    f"{c['name']}     {c['weight']:.1f} kg",
+                    f"+${c['price']}", (150, 245, 150),
+                )
+                shown += 1
+
+            if len(carcasses) > shown:
+                self._fill_row(
+                    shown, '',
+                    f"...and {len(carcasses) - shown} more",
+                    '', (150, 245, 150), dim_name=True,
+                )
+                shown += 1
+
+            total = sum(c['price'] for c in carcasses)
+            self._fill_row(
+                shown, 'A', 'Sell ALL',
+                f'+${total}', (150, 245, 150), sell_all=True,
+            )
+
+            self._shop_footer.text = (
+                'number = sell one    ·    A = sell all    ·    TAB / E'
+            )
         else:
-            rows = []
-            for w in weapons:
+            for i, w in enumerate(weapons[:9]):
                 if w['owned']:
-                    badge = 'OWNED'
-                    suffix = ''
+                    price_text = 'OWNED'
+                    price_rgb  = (160, 220, 170)
+                    dim        = True
+                elif w['affordable']:
+                    price_text = f"${w['price']}"
+                    price_rgb  = (150, 245, 150)
+                    dim        = False
                 else:
-                    badge = f'${w["price"]}'
-                    suffix = '' if w['affordable'] else '  (not enough $)'
-                rows.append(f'  [{w["key"]}]  {w["name"]:<18}{badge}{suffix}')
-            body = '\n'.join(rows)
-            footer = 'press letter to buy  ·  TAB switches tab  ·  E closes'
-        self._shop_body.text   = body
-        self._shop_footer.text = footer
+                    price_text = f"${w['price']}"
+                    price_rgb  = (225, 105, 95)
+                    dim        = False
+                self._fill_row(i, w['key'], w['name'],
+                               price_text, price_rgb, dim_name=dim)
+            self._shop_footer.text = (
+                'letter = buy    ·    TAB switches tab    ·    E closes'
+            )
 
     def update(self, dt):
         # Hit flash (damage taken / generic)
