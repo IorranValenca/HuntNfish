@@ -1085,10 +1085,19 @@ def spook_all(position, radius):
 
 def get_lootable_near(position, radius=2.8):
     best, best_d = None, radius
+    stale = []
     for animal in list(lootable_deer):
-        d = (animal.position - position).length()
+        try:
+            d = (animal.position - position).length()
+        except (AssertionError, AttributeError):
+            # Entity was destroyed (60s timeout) — drop from the list
+            stale.append(animal)
+            continue
         if d < best_d:
             best, best_d = animal, d
+    for s in stale:
+        if s in lootable_deer:
+            lootable_deer.remove(s)
     return best
 
 
