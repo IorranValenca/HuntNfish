@@ -105,28 +105,73 @@ def _build_cabin():
                position=(cx + wx, 1.95, cz + 3.17),
                texture=T_DARK)
 
-    # Roof — two slanted planes meeting at the ridge
-    Entity(model='cube', scale=(7.6, 0.18, 4.2),
-           position=(cx - 1.6, 3.95, cz),
-           texture=T_ROOF, rotation_x=-32, collider='box')
-    Entity(model='cube', scale=(7.6, 0.18, 4.2),
-           position=(cx + 1.6, 3.95, cz),
-           texture=T_ROOF, rotation_x= 32, collider='box')
-    # Ridge cap
-    Entity(model='cube', scale=(7.7, 0.20, 0.30),
-           position=(cx, 4.60, cz),
-           texture=T_ROOF2)
-    # Roof gable triangles (filled with cubes — simpler than triangles)
-    Entity(model='cube', scale=(0.18, 1.40, 6.4),
-           position=(cx, 3.85, cz),
-           texture=T_LOG)
+    # ── Roof — proper pitched gable, ridge runs along the X axis ────────
+    WALL_TOP   = 3.15
+    ROOF_RISE  = 1.90
+    ROOF_RUN   = 3.30          # half-depth + small overhang
+    RIDGE_Y    = WALL_TOP + ROOF_RISE
+    PANEL_LEN  = math.sqrt(ROOF_RUN ** 2 + ROOF_RISE ** 2)
+    ROOF_ANGLE = math.degrees(math.atan2(ROOF_RISE, ROOF_RUN))
+    PANEL_W    = 7.60          # side overhangs included
+    PANEL_Y    = (WALL_TOP + RIDGE_Y) * 0.5
 
-    # Chimney
-    Entity(model='cube', scale=(0.80, 1.80, 0.80),
-           position=(cx + 2.80, 4.20, cz - 1.20),
+    # Back panel — slopes UP from back eave to the ridge
+    Entity(model='cube',
+           scale=(PANEL_W, 0.16, PANEL_LEN),
+           position=(cx, PANEL_Y, cz - ROOF_RUN * 0.5),
+           rotation_x=-ROOF_ANGLE,
+           texture=T_ROOF, collider='box')
+    # Front panel — slopes DOWN from the ridge to the front eave
+    Entity(model='cube',
+           scale=(PANEL_W, 0.16, PANEL_LEN),
+           position=(cx, PANEL_Y, cz + ROOF_RUN * 0.5),
+           rotation_x=ROOF_ANGLE,
+           texture=T_ROOF, collider='box')
+    # Ridge capstone along the peak
+    Entity(model='cube',
+           scale=(PANEL_W + 0.18, 0.22, 0.34),
+           position=(cx, RIDGE_Y + 0.05, cz),
+           texture=T_ROOF2)
+    # Decorative fascia boards along the eaves (darker trim)
+    for _eave_z in (cz - ROOF_RUN, cz + ROOF_RUN):
+        Entity(model='cube',
+               scale=(PANEL_W + 0.18, 0.12, 0.06),
+               position=(cx, WALL_TOP - 0.02, _eave_z),
+               texture=T_ROOF2)
+
+    # ── Triangular log gables on the side walls (mirror each other) ─────
+    GABLE_STEPS = 5
+    GABLE_BASE  = 6.40
+    STEP_H      = ROOF_RISE / GABLE_STEPS
+    for _face_x in (cx - 3.40, cx + 3.40):
+        for _i in range(GABLE_STEPS):
+            _yc      = WALL_TOP + (_i + 0.5) * STEP_H
+            _frac_up = (_i + 0.5) / GABLE_STEPS
+            _w_z     = GABLE_BASE * (1.0 - _frac_up)
+            if _w_z < 0.20:
+                continue
+            Entity(model='cube',
+                   scale=(0.20, STEP_H + 0.02, _w_z),
+                   position=(_face_x, _yc, cz),
+                   texture=T_LOG)
+        # Small shadow strip at the bottom of each gable
+        Entity(model='cube',
+               scale=(0.05, 0.05, GABLE_BASE + 0.05),
+               position=(_face_x + (0.11 if _face_x > cx else -0.11),
+                         WALL_TOP - 0.01, cz),
+               texture=T_LOG_D)
+
+    # ── Stone chimney rising through the back roof panel ────────────────
+    Entity(model='cube', scale=(0.75, 5.40, 0.75),
+           position=(cx + 2.50, 2.95, cz - 1.50),
            texture=T_STONE, collider='box')
-    Entity(model='cube', scale=(0.95, 0.18, 0.95),
-           position=(cx + 2.80, 5.20, cz - 1.20),
+    # Crown course (a hair wider)
+    Entity(model='cube', scale=(0.92, 0.16, 0.92),
+           position=(cx + 2.50, 5.72, cz - 1.50),
+           texture=T_STONE)
+    # Chimney top opening
+    Entity(model='cube', scale=(0.62, 0.10, 0.62),
+           position=(cx + 2.50, 5.85, cz - 1.50),
            texture=T_DARK)
 
     # Porch slab + 2 posts + low railing
