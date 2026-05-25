@@ -93,13 +93,13 @@ class Shotgun(Entity):
         self._recoil   = 0.0
 
         try:
-            self._snd_shot = base.loader.loadSfx('u_62htdrvg4y-gun-shot-359196.mp3')
+            self._snd_shot = base.loader.loadSfx('dragon-studio-cinematic-shotgun-with-reload-467480.mp3')
             self._snd_shot.setVolume(1.0)
         except Exception:
             self._snd_shot = None
         try:
-            self._snd_reload = base.loader.loadSfx('RevolverReload.mp3')
-            self._snd_reload.setVolume(0.6)
+            self._snd_reload = base.loader.loadSfx('freesound_community-shotgun-reload-sfx-36524.mp3')
+            self._snd_reload.setVolume(0.9)
         except Exception:
             self._snd_reload = None
 
@@ -110,7 +110,10 @@ class Shotgun(Entity):
         self.ammo    -= 1
         self._fire_cd = self.FIRE_CD
         self._recoil  = 4.0
-        if self._snd_shot: self._snd_shot.play()
+        if self._snd_shot:
+            self._snd_shot.stop()          # cancel any rapid-fire overlap
+            self._snd_shot.set_time(0.70)  # skip the cocking intro
+            self._snd_shot.play()
         self._flash.enabled = True
         invoke(setattr, self._flash, 'enabled', False, delay=.06)
 
@@ -184,6 +187,8 @@ class Shotgun(Entity):
                     hud_ref.refresh_ammo(self.ammo, self.state, self.MAG_SIZE)
                 if self.ammo >= self.MAG_SIZE:
                     self.state = 'ready'
+                    if self._snd_reload:
+                        self._snd_reload.stop()   # cut the reload audio
                     if hud_ref:
                         hud_ref.refresh_ammo(self.ammo, self.state, self.MAG_SIZE)
                 else:
