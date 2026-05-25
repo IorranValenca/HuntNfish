@@ -97,4 +97,4 @@ class Binoculars(Entity):
 
     def on_disable(self):
         self._ads = False
-        camera.fov = 80
+        camera.fov = 90
